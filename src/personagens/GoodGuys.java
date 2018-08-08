@@ -6,44 +6,42 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.ImageIcon;
 
-public class Doctor {
-	private int dx;
-	private int dy;
-	private int x = 40;
-	private int y = 60;
+public abstract class GoodGuys {
+	private int x;
+	private int y;
 	private int w;
 	private int h;
-	private int speed = -2;
+	private int speed;
 	private Image image;
-	private boolean visible = false;
+//	private boolean visible = false;
 
-	public Doctor() {
+//	public GoodGuys() {
+//
+//		loadImage();
+//	}
 
-		loadImage();
+	// força os personagens deste tipo a se moverem para a esquerda
+	protected void setSpeed(int speed) {
+		this.speed = - Math.abs(speed);
 	}
-
-	
 	public int getSpeed() {
 		return this.speed;
 	}
-	public Doctor(int i, int nextInt) {
-		this.x = i;
-		this.y = nextInt;
-		this.visible = true;
-		this.loadImage();
+	
+	public GoodGuys(int x, int y, int speed, String nameImg) {
+		this.x = x;
+		this.y = y;
+		this.setSpeed(speed);
+		this.loadImage(nameImg);
 	}
 
-	private void loadImage() {
+	private void loadImage(String relativePath) {
 
-		ImageIcon ii = new ImageIcon("src/resources/dalek.png");
+		ImageIcon ii = new ImageIcon("src/resources/" + relativePath + ".png");
 		image = ii.getImage();
 
 		w = image.getWidth(null);
 		h = image.getHeight(null);
-	}
-
-	public void setVisible(boolean b) {
-		this.visible = b;
 	}
 	
 	public void move() {
@@ -53,10 +51,6 @@ public class Doctor {
 		if (x == 0 && this.speed != 0) {
 			this.speed = 0;
 		}
-	}
-
-	public void setDx(int dx) {
-		this.dx = dx;
 	}
 
 	public int getX() {

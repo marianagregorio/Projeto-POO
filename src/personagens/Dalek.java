@@ -1,20 +1,17 @@
 package personagens;
 import java.awt.Image;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 
 import javax.swing.ImageIcon;
 
-public class Dalek extends KeyAdapter {
+public class Dalek {
 
 	    private int x = 40;
 	    private int y = 60;
 	    private int w;
 	    private int h;
-//	    private boolean visible;
 	    private Image image;
 
-	    private final int EARTH_X = 1200;
+	    private final int EARTH_X = 1100;
 	    private int speed = 2;
 
 	    public int move() {
@@ -30,7 +27,6 @@ public class Dalek extends KeyAdapter {
 	    public Dalek(int x, int y) {
 	        this.x = x;
 	        this.y = y;
-//	        this.visible = true;
 	        this.loadImage();
 	    }
 
@@ -63,14 +59,5 @@ public class Dalek extends KeyAdapter {
 	        
 	        return image;
 	    }
-	    
-//
-//	    public boolean isVisible() {
-//	        return visible;
-//	    }
-//
-//	    public void setVisible(Boolean visible) {
-//	        this.visible = visible;
-//	    }
 
 }

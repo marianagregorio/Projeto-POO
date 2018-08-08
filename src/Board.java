@@ -1,29 +1,28 @@
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.font.TextAttribute;
 import java.text.AttributedString;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import javax.swing.JOptionPane;
+import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
 import adapter.TAdapter;
 import personagens.Dalek;
 import personagens.DalekSaucer;
-import personagens.Doctor;
+import personagens.GoodGuys;
+import type.GoodGuysEnum;
 
+@SuppressWarnings("serial")
 public class Board extends JPanel implements ActionListener {
 
 	private final int NUMBER_TO_WIN = 5;
@@ -31,31 +30,40 @@ public class Board extends JPanel implements ActionListener {
 	private final String GAME_OVER_MESSAGE = "YOU'RE A DESGRACE TO THE DALEK RACE";
 	private final int DELAY = 10;
 	private boolean gameOver = false;
-	// private HashMap<Doctor, Dimension> docPositions;
 	private Timer timer;
 	ConsumidoraDoctors c;
 	private DalekSaucer saucer;
 	private static int n_daleks_on_earth = 0;
+	private int[][] explosoes = new int[5][2];
+	private int iExplosao = 0;
 
 	public Board() {
 
 		initBoard();
 	}
 
+	// inicia aleatoriamente os personagens que defendem a Terra
+	private void initProdutoras() {
+
+		BlockingQueue<GoodGuys> doctors = new ArrayBlockingQueue<>(10);
+
+		ProdutoraGoodGuys pEleven = new ProdutoraGoodGuys(GoodGuysEnum.ELEVEN, doctors);
+		ProdutoraGoodGuys pK9 = new ProdutoraGoodGuys(GoodGuysEnum.K9, doctors);
+		c = new ConsumidoraDoctors(doctors);
+		pEleven.start();
+		pK9.start();
+		c.start();
+	}
+	
 	private void initBoard() {
 
 		this.saucer = new DalekSaucer();
 
-		BlockingQueue<Doctor> doctors = new ArrayBlockingQueue<>(10);
-
-		ProdutoraDoctors p = new ProdutoraDoctors(1, doctors);
-		c = new ConsumidoraDoctors(doctors);
-		p.start();
-		c.start();
-
+		this.initProdutoras();
+		
 		addKeyListener(new TAdapter<DalekSaucer>(this.saucer));
 		setFocusable(true);
-		setBackground(Color.BLUE);
+		setBackground(new Color(0,0,200));
 		setDoubleBuffered(true);
 
 		this.timer = new Timer(DELAY, this);
@@ -85,15 +93,17 @@ public class Board extends JPanel implements ActionListener {
 			return;
 
 		}
+		
+		this.showExplosoes(g2d);
+		
+		g2d.drawImage(new ImageIcon("src/resources/earth.png").getImage(), 1100, (int) getSize().getHeight()/2, this);
 
 		g2d.drawImage(saucer.getImage(), saucer.getX(), saucer.getY(), this);
 
-		List<Doctor> doctors = c.getDoctors();
-		int i = 0;
-		// this.docPositions = new HashMap<>();
-		for (Doctor doctor : doctors) {
+		List<GoodGuys> doctors = c.getDoctors();
+
+		for (GoodGuys doctor : doctors) {
 			if (doctor.getSpeed() != 0) {
-				// this.docPositions.put(doctor, new Dimension(doctor.getX(), doctor.getY()));
 				g2d.drawImage(doctor.getImage(), doctor.getX(), doctor.getY(), this);
 			}
 		}
@@ -101,16 +111,16 @@ public class Board extends JPanel implements ActionListener {
 		List<Dalek> daleks = saucer.getDaleks();
 
 		// Listas para evitar ConcurrentException
-		List<Doctor> doctorsToRemove = new ArrayList<Doctor>();
+		List<GoodGuys> doctorsToRemove = new ArrayList<GoodGuys>();
 		List<Dalek> daleksToRemove = new ArrayList<Dalek>();
 
-		for (Doctor doctor : doctors) {
+		for (GoodGuys doctor : doctors) {
 			for (Dalek dalek : daleks) {
 				if (Math.abs(doctor.getY() - dalek.getY()) < dalek.getHeight()
 						&& Math.abs(doctor.getX() - dalek.getX()) < dalek.getWidth()) {
 					doctorsToRemove.add(doctor);
 					daleksToRemove.add(dalek);
-					this.explode();
+					this.explode(doctor.getX(), doctor.getY());
 				} else {
 					if (doctor.getSpeed() != 0) {
 						// this.docPositions.put(doctor, new Dimension(doctor.getX(), doctor.getY()));
@@ -147,13 +157,24 @@ public class Board extends JPanel implements ActionListener {
 		as1.addAttribute(TextAttribute.SIZE, 40);
 		as1.addAttribute(TextAttribute.FOREGROUND, Color.RED, 0, msg.length());
 		as1.addAttribute(TextAttribute.WEIGHT, TextAttribute.WEIGHT_EXTRABOLD);
-		g2d.drawString(as1.getIterator(), 50, 300);
-		// this.saucer.clearDaleks();
+		g2d.drawString(as1.getIterator(), 100, 300);
 	}
 
-	// TODO: explosão
-	private void explode() {
-		System.out.println("EXPLODIU HAHAHHAHAHAHAHAH");
+	// adiciona a última explosão na lista
+	private void explode(int x, int y) {
+		if (iExplosao==5) iExplosao = 0;
+		this.explosoes[iExplosao][0] = x;
+		this.explosoes[iExplosao][1] = y;
+		iExplosao++;
+	}
+
+	// exibe as últimas cinco explosões na tela
+	private void showExplosoes(Graphics2D g2d) {
+		Random ran = new Random();
+		for (int[] dim : explosoes) {
+			g2d.drawImage(new ImageIcon("src/resources/fogo"+ ran.nextInt(2) +".png").getImage(),
+					dim[0], dim[1], this);
+		}
 	}
 
 	@Override
@@ -166,15 +187,15 @@ public class Board extends JPanel implements ActionListener {
 		repaint();
 	}
 
+	// atualiza a posição dos bonzinhos
 	private void updateDoctors() {
-		List<Doctor> doctors = this.c.getDoctors();
-		for (Doctor doctor : doctors) {
-			// if (doctor.getSpeed() != 0) {
+		List<GoodGuys> doctors = this.c.getDoctors();
+		for (GoodGuys doctor : doctors) {
 			doctor.move();
-			// }
 		}
 	}
 
+	// atualiza a posição dos daleks e quantos já chegaram à Terra
 	private void updateDaleks() {
 
 		List<Dalek> daleks = this.saucer.getDaleks();
@@ -183,16 +204,12 @@ public class Board extends JPanel implements ActionListener {
 
 			Dalek dalek = daleks.get(i);
 
-			// if (dalek.isVisible()) {
-
 			n_daleks_on_earth += dalek.move();
-			// } else {
 
-			// daleks.remove(i);
-			// }
 		}
 	}
 
+	// atualiza a posição da nave
 	private void updateSaucer() {
 
 		this.saucer.move();

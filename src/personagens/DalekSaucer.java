@@ -25,7 +25,7 @@ public class DalekSaucer extends KeyAdapter{
 
 	    private void loadImage() {
 	        
-	        ImageIcon ii = new ImageIcon("src/resources/dalek.png");
+	        ImageIcon ii = new ImageIcon("src/resources/saucer.png");
 	        image = ii.getImage(); 
 	        
 	        w = image.getWidth(null);
