@@ -30,6 +30,7 @@ public class Doctor {
 		this.x = i;
 		this.y = nextInt;
 		this.visible = true;
+		this.loadImage();
 	}
 
 	private void loadImage() {
@@ -41,6 +42,10 @@ public class Doctor {
 		h = image.getHeight(null);
 	}
 
+	public void setVisible(boolean b) {
+		this.visible = b;
+	}
+	
 	public void move() {
 
 		x += this.speed;

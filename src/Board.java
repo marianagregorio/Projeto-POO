@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
@@ -8,6 +9,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.font.TextAttribute;
 import java.text.AttributedString;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -23,9 +26,12 @@ import personagens.Doctor;
 
 public class Board extends JPanel implements ActionListener {
 
-	private final int ICRAFT_X = 40;
-	private final int ICRAFT_Y = 60;
+	private final int NUMBER_TO_WIN = 5;
+	private final String WINNING_MESSAGE = "YOU HAVE DEFEATED THE TIME LORDS!!!";
+	private final String GAME_OVER_MESSAGE = "YOU'RE A DESGRACE TO THE DALEK RACE";
 	private final int DELAY = 10;
+	private boolean gameOver = false;
+	// private HashMap<Doctor, Dimension> docPositions;
 	private Timer timer;
 	ConsumidoraDoctors c;
 	private DalekSaucer saucer;
@@ -49,7 +55,7 @@ public class Board extends JPanel implements ActionListener {
 
 		addKeyListener(new TAdapter<DalekSaucer>(this.saucer));
 		setFocusable(true);
-		setBackground(Color.DARK_GRAY);
+		setBackground(Color.BLUE);
 		setDoubleBuffered(true);
 
 		this.timer = new Timer(DELAY, this);
@@ -69,33 +75,85 @@ public class Board extends JPanel implements ActionListener {
 
 		Graphics2D g2d = (Graphics2D) g;
 
-		if (n_daleks_on_earth >= 5) {
+		if (this.gameOver) {
+			this.gameOver(g2d);
+			return;
+		}
+		if (n_daleks_on_earth >= this.NUMBER_TO_WIN) {
 
-			AttributedString as1 = new AttributedString("YOU WIN");
-			as1.addAttribute(TextAttribute.SIZE, 40);
-			as1.addAttribute(TextAttribute.FOREGROUND, Color.RED, 0, 7);
-			g2d.drawString(as1.getIterator(), 550, 200);
-			this.saucer.clearDaleks();
+			this.win(g2d);
+			return;
 
-		} else {
+		}
 
-			g2d.drawImage(saucer.getImage(), saucer.getX(), saucer.getY(), this);
+		g2d.drawImage(saucer.getImage(), saucer.getX(), saucer.getY(), this);
 
-			List<Dalek> daleks = saucer.getDaleks();
-
-			for (Dalek dalek : daleks) {
-
-				g2d.drawImage(dalek.getImage(), dalek.getX(), dalek.getY(), this);
-			}
-
-			List<Doctor> doctors = c.getDoctors();
-
-			for (Doctor doctor : doctors) {
-				if (doctor.getSpeed() != 0)
-					// TODO: descobrir o problema com a imagem do Doctor
-					g2d.drawImage(this.saucer.getImage(), doctor.getX(), doctor.getY(), this);
+		List<Doctor> doctors = c.getDoctors();
+		int i = 0;
+		// this.docPositions = new HashMap<>();
+		for (Doctor doctor : doctors) {
+			if (doctor.getSpeed() != 0) {
+				// this.docPositions.put(doctor, new Dimension(doctor.getX(), doctor.getY()));
+				g2d.drawImage(doctor.getImage(), doctor.getX(), doctor.getY(), this);
 			}
 		}
+
+		List<Dalek> daleks = saucer.getDaleks();
+
+		// Listas para evitar ConcurrentException
+		List<Doctor> doctorsToRemove = new ArrayList<Doctor>();
+		List<Dalek> daleksToRemove = new ArrayList<Dalek>();
+
+		for (Doctor doctor : doctors) {
+			for (Dalek dalek : daleks) {
+				if (Math.abs(doctor.getY() - dalek.getY()) < dalek.getHeight()
+						&& Math.abs(doctor.getX() - dalek.getX()) < dalek.getWidth()) {
+					doctorsToRemove.add(doctor);
+					daleksToRemove.add(dalek);
+					this.explode();
+				} else {
+					if (doctor.getSpeed() != 0) {
+						// this.docPositions.put(doctor, new Dimension(doctor.getX(), doctor.getY()));
+						g2d.drawImage(doctor.getImage(), doctor.getX(), doctor.getY(), this);
+					} else {
+						doctorsToRemove.add(doctor);
+					}
+					g2d.drawImage(dalek.getImage(), dalek.getX(), dalek.getY(), this);
+				}
+			}
+			if (Math.abs(doctor.getY() - this.saucer.getY()) < this.saucer.getHeight()
+					&& Math.abs(doctor.getX() - this.saucer.getX()) < this.saucer.getWidth()) {
+				this.gameOver = true;
+			}
+
+		}
+		doctors.removeAll(doctorsToRemove);
+		daleks.removeAll(daleksToRemove);
+
+	}
+
+	// limpa o quadro e exibe a mensagem de vitória
+	private void win(Graphics2D g2d) {
+		this.showMessage(g2d, this.WINNING_MESSAGE);
+	}
+
+	// limpa o quadro e exibe a menagem de fim de jogo
+	private void gameOver(Graphics g2d) {
+		this.showMessage(g2d, this.GAME_OVER_MESSAGE);
+	}
+
+	private void showMessage(Graphics g2d, String msg) {
+		AttributedString as1 = new AttributedString(msg);
+		as1.addAttribute(TextAttribute.SIZE, 40);
+		as1.addAttribute(TextAttribute.FOREGROUND, Color.RED, 0, msg.length());
+		as1.addAttribute(TextAttribute.WEIGHT, TextAttribute.WEIGHT_EXTRABOLD);
+		g2d.drawString(as1.getIterator(), 50, 300);
+		// this.saucer.clearDaleks();
+	}
+
+	// TODO: explosão
+	private void explode() {
+		System.out.println("EXPLODIU HAHAHHAHAHAHAHAH");
 	}
 
 	@Override
@@ -111,11 +169,9 @@ public class Board extends JPanel implements ActionListener {
 	private void updateDoctors() {
 		List<Doctor> doctors = this.c.getDoctors();
 		for (Doctor doctor : doctors) {
-			if (doctor.getSpeed() != 0) {
-//				doctors.remove(doctor);
-//			} else {
-				doctor.move();
-			}
+			// if (doctor.getSpeed() != 0) {
+			doctor.move();
+			// }
 		}
 	}
 
