@@ -2,7 +2,6 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 
-import personagens.Eleven;
 import personagens.GoodGuys;
 
 public class ConsumidoraDoctors extends Thread {

@@ -1,8 +1,6 @@
 package personagens;
 
 import java.awt.Image;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 
 import javax.swing.ImageIcon;
 
@@ -13,12 +11,6 @@ public abstract class GoodGuys {
 	private int h;
 	private int speed;
 	private Image image;
-//	private boolean visible = false;
-
-//	public GoodGuys() {
-//
-//		loadImage();
-//	}
 
 	// força os personagens deste tipo a se moverem para a esquerda
 	protected void setSpeed(int speed) {

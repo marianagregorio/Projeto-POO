@@ -49,21 +49,26 @@ public class Board extends JPanel implements ActionListener {
 
 		ProdutoraGoodGuys pEleven = new ProdutoraGoodGuys(GoodGuysEnum.ELEVEN, doctors);
 		ProdutoraGoodGuys pK9 = new ProdutoraGoodGuys(GoodGuysEnum.K9, doctors);
+		ProdutoraGoodGuys pTen = new ProdutoraGoodGuys(GoodGuysEnum.TEN, doctors);
+		ProdutoraGoodGuys pTardis = new ProdutoraGoodGuys(GoodGuysEnum.TARDIS, doctors);
 		c = new ConsumidoraDoctors(doctors);
 		pEleven.start();
 		pK9.start();
+		pTen.start();
+		pTardis.start();
 		c.start();
 	}
-	
+
+	// inicia a visualização
 	private void initBoard() {
 
 		this.saucer = new DalekSaucer();
 
 		this.initProdutoras();
-		
+
 		addKeyListener(new TAdapter<DalekSaucer>(this.saucer));
 		setFocusable(true);
-		setBackground(new Color(0,0,200));
+		setBackground(new Color(0, 0, 150));
 		setDoubleBuffered(true);
 
 		this.timer = new Timer(DELAY, this);
@@ -93,10 +98,10 @@ public class Board extends JPanel implements ActionListener {
 			return;
 
 		}
-		
+
 		this.showExplosoes(g2d);
-		
-		g2d.drawImage(new ImageIcon("src/resources/earth.png").getImage(), 1100, (int) getSize().getHeight()/2, this);
+
+		g2d.drawImage(new ImageIcon("src/resources/earth.png").getImage(), 1100, (int) getSize().getHeight() / 2, this);
 
 		g2d.drawImage(saucer.getImage(), saucer.getX(), saucer.getY(), this);
 
@@ -162,7 +167,8 @@ public class Board extends JPanel implements ActionListener {
 
 	// adiciona a última explosão na lista
 	private void explode(int x, int y) {
-		if (iExplosao==5) iExplosao = 0;
+		if (iExplosao == 5)
+			iExplosao = 0;
 		this.explosoes[iExplosao][0] = x;
 		this.explosoes[iExplosao][1] = y;
 		iExplosao++;
@@ -172,8 +178,9 @@ public class Board extends JPanel implements ActionListener {
 	private void showExplosoes(Graphics2D g2d) {
 		Random ran = new Random();
 		for (int[] dim : explosoes) {
-			g2d.drawImage(new ImageIcon("src/resources/fogo"+ ran.nextInt(2) +".png").getImage(),
-					dim[0], dim[1], this);
+			if (dim[0] != 0 || dim[1] != 0)
+				g2d.drawImage(new ImageIcon("src/resources/fogo" + ran.nextInt(2) + ".png").getImage(), dim[0], dim[1],
+						this);
 		}
 	}
 

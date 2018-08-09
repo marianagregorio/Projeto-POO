@@ -4,6 +4,8 @@ import java.util.concurrent.BlockingQueue;
 import personagens.Eleven;
 import personagens.GoodGuys;
 import personagens.K9;
+import personagens.Tardis;
+import personagens.Ten;
 import type.GoodGuysEnum;
 
 public class ProdutoraGoodGuys extends Thread {
@@ -22,6 +24,10 @@ public class ProdutoraGoodGuys extends Thread {
 			return new Eleven(x, y);
 		case K9:
 			return new K9(x, y);
+		case TEN:
+			return new Ten(x, y);
+		case TARDIS:
+			return new Tardis(x, y);
 		default:
 			return null;
 		}
