@@ -1,8 +1,9 @@
+package threads;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 
-import personagens.GoodGuys;
+import personagens.generic.GoodGuys;
 
 public class ConsumidoraDoctors extends Thread {
 
@@ -30,6 +31,10 @@ public class ConsumidoraDoctors extends Thread {
 				break;
 			}
 		}
+	}
+
+	public void clearDoctors() {
+		this.doctors.clear();		
 	}
 
 }

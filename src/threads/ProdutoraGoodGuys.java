@@ -1,11 +1,12 @@
+package threads;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 
 import personagens.Eleven;
-import personagens.GoodGuys;
 import personagens.K9;
 import personagens.Tardis;
 import personagens.Ten;
+import personagens.generic.GoodGuys;
 import type.GoodGuysEnum;
 
 public class ProdutoraGoodGuys extends Thread {

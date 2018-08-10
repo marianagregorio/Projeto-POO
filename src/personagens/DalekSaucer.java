@@ -9,7 +9,8 @@ import java.util.List;
 import javax.swing.ImageIcon;
 
 public class DalekSaucer extends KeyAdapter{
-	 private int dx;
+		private static int nSaucers = 0;
+	    private int dx;
 	    private int dy;
 	    private int x = 40;
 	    private int y = 60;
@@ -19,8 +20,12 @@ public class DalekSaucer extends KeyAdapter{
 	    private List<Dalek> daleks;
 
 	    public DalekSaucer() {
+	    	if(nSaucers>1) {
+	    		throw new RuntimeException("O jogo suporta apenas uma nave");
+	    	}
 	    	this.daleks = new ArrayList<>();
 	        loadImage();
+	        nSaucers++;
 	    }
 
 	    private void loadImage() {

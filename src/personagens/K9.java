@@ -1,5 +1,7 @@
 package personagens;
 
+import personagens.generic.GoodGuys;
+
 public class K9 extends GoodGuys {
 
 	public K9(int x, int y) {

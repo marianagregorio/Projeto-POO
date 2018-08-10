@@ -3,7 +3,9 @@ import java.awt.Image;
 
 import javax.swing.ImageIcon;
 
-public class Dalek {
+import personagens.generic.MovingStuff;
+
+public class Dalek implements MovingStuff {
 
 	    private int x = 40;
 	    private int y = 60;
@@ -16,7 +18,7 @@ public class Dalek {
 
 	    public int move() {
 	        
-	        x += speed;
+	        x += this.speed;
 	        
 	        if (x == EARTH_X && this.speed != 0) {
 	            this.speed = 0;
@@ -27,16 +29,16 @@ public class Dalek {
 	    public Dalek(int x, int y) {
 	        this.x = x;
 	        this.y = y;
-	        this.loadImage();
+	        this.loadImage("dalek");
 	    }
 
-	    private void loadImage() {
+	    private void loadImage(String relativePath) {
 	        
-	        ImageIcon ii = new ImageIcon("src/resources/dalek.png");
-	        image = ii.getImage(); 
+	        ImageIcon ii = new ImageIcon("src/resources/" + relativePath + ".png");
+	        this.image = ii.getImage(); 
 	        
-	        w = image.getWidth(null);
-	        h = image.getHeight(null);
+	        this.w = this.image.getWidth(null);
+	        this.h = this.image.getHeight(null);
 	    }
 
 	    public int getX() {

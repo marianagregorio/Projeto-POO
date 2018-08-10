@@ -19,44 +19,59 @@ import javax.swing.Timer;
 import adapter.TAdapter;
 import personagens.Dalek;
 import personagens.DalekSaucer;
-import personagens.GoodGuys;
+import personagens.generic.GoodGuys;
+import threads.ConsumidoraDoctors;
+import threads.ProdutoraGoodGuys;
 import type.GoodGuysEnum;
 
 @SuppressWarnings("serial")
 public class Board extends JPanel implements ActionListener {
 
-	private final int NUMBER_TO_WIN = 5;
+	private static int nBoards = 0;
+	private final int NUMBER_TO_WIN = 8;
 	private final String WINNING_MESSAGE = "YOU HAVE DEFEATED THE TIME LORDS!!!";
-	private final String GAME_OVER_MESSAGE = "YOU'RE A DESGRACE TO THE DALEK RACE";
+	private final String GAME_OVER_MESSAGE = "YOU ASHAME THE DALEK RACE";
 	private final int DELAY = 10;
+	private static int score = 0;
 	private boolean gameOver = false;
-	private Timer timer;
-	ConsumidoraDoctors c;
-	private DalekSaucer saucer;
 	private static int n_daleks_on_earth = 0;
 	private int[][] explosoes = new int[5][2];
 	private int iExplosao = 0;
+	private Timer timer;
+	ConsumidoraDoctors c;
+	private DalekSaucer saucer;
+	private ComandosBoard comandos = new ComandosBoard(this);
+
+	BlockingQueue<GoodGuys> doctors = new ArrayBlockingQueue<>(10);
 
 	public Board() {
-
+		if (nBoards > 1) {
+			throw new RuntimeException("O jogo suporta apenas um board");
+		}
 		initBoard();
 	}
 
 	// inicia aleatoriamente os personagens que defendem a Terra
 	private void initProdutoras() {
 
-		BlockingQueue<GoodGuys> doctors = new ArrayBlockingQueue<>(10);
-
-		ProdutoraGoodGuys pEleven = new ProdutoraGoodGuys(GoodGuysEnum.ELEVEN, doctors);
-		ProdutoraGoodGuys pK9 = new ProdutoraGoodGuys(GoodGuysEnum.K9, doctors);
-		ProdutoraGoodGuys pTen = new ProdutoraGoodGuys(GoodGuysEnum.TEN, doctors);
-		ProdutoraGoodGuys pTardis = new ProdutoraGoodGuys(GoodGuysEnum.TARDIS, doctors);
 		c = new ConsumidoraDoctors(doctors);
-		pEleven.start();
-		pK9.start();
-		pTen.start();
-		pTardis.start();
+
+		for (GoodGuysEnum goodGuys : GoodGuysEnum.values()) {
+			new ProdutoraGoodGuys(goodGuys, doctors).start();
+		}
 		c.start();
+	}
+
+	// reiniciar o jogo
+	public void reload() {
+		score = 0;
+		gameOver = false;
+		n_daleks_on_earth = 0;
+		explosoes = new int[5][2];
+		iExplosao = 0;
+		this.saucer.clearDaleks();
+
+		initProdutoras();
 	}
 
 	// inicia a visualização
@@ -67,8 +82,9 @@ public class Board extends JPanel implements ActionListener {
 		this.initProdutoras();
 
 		addKeyListener(new TAdapter<DalekSaucer>(this.saucer));
+		addKeyListener(new TAdapter<ComandosBoard>(this.comandos));
 		setFocusable(true);
-		setBackground(new Color(0, 0, 150));
+		setBackground(new Color(0, 0, 100));
 		setDoubleBuffered(true);
 
 		this.timer = new Timer(DELAY, this);
@@ -123,12 +139,15 @@ public class Board extends JPanel implements ActionListener {
 			for (Dalek dalek : daleks) {
 				if (Math.abs(doctor.getY() - dalek.getY()) < dalek.getHeight()
 						&& Math.abs(doctor.getX() - dalek.getX()) < dalek.getWidth()) {
-					doctorsToRemove.add(doctor);
+					doctor.weaken();
+					score++;
+					if (doctor.getStrength() == 0) {
+						doctorsToRemove.add(doctor);
+					}
 					daleksToRemove.add(dalek);
 					this.explode(doctor.getX(), doctor.getY());
 				} else {
 					if (doctor.getSpeed() != 0) {
-						// this.docPositions.put(doctor, new Dimension(doctor.getX(), doctor.getY()));
 						g2d.drawImage(doctor.getImage(), doctor.getX(), doctor.getY(), this);
 					} else {
 						doctorsToRemove.add(doctor);
@@ -158,11 +177,20 @@ public class Board extends JPanel implements ActionListener {
 	}
 
 	private void showMessage(Graphics g2d, String msg) {
+		this.showMessage(g2d, msg, 50, 100, 250);
+		this.showMessage(g2d, "SCORE: " + score, 20, 100, 350);
+		this.showMessage(g2d, "PRESS F2 TO RESTART", 20, 450, 350);
+	}
+
+	private void showMessage(Graphics g2d, String msg, int fontSize, int x, int y) {
+		this.saucer.clearDaleks();
+		c.clearDoctors();
+		c.interrupt();
 		AttributedString as1 = new AttributedString(msg);
-		as1.addAttribute(TextAttribute.SIZE, 40);
+		as1.addAttribute(TextAttribute.SIZE, fontSize);
 		as1.addAttribute(TextAttribute.FOREGROUND, Color.RED, 0, msg.length());
 		as1.addAttribute(TextAttribute.WEIGHT, TextAttribute.WEIGHT_EXTRABOLD);
-		g2d.drawString(as1.getIterator(), 100, 300);
+		g2d.drawString(as1.getIterator(), x, y);
 	}
 
 	// adiciona a última explosão na lista
@@ -186,7 +214,6 @@ public class Board extends JPanel implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
 		updateDaleks();
 		updateDoctors();
 		updateSaucer();
@@ -211,7 +238,10 @@ public class Board extends JPanel implements ActionListener {
 
 			Dalek dalek = daleks.get(i);
 
-			n_daleks_on_earth += dalek.move();
+			if (dalek.move() == 1) {
+				n_daleks_on_earth++;
+				score += 50;
+			}
 
 		}
 	}
